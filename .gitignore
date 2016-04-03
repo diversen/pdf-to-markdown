@@ -1,0 +1,8 @@
+*.pdf
+*.html
+*.xml
+*.txt
+*.png
+*.jpg
+node_modules
+nbproject

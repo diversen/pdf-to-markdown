@@ -1,3 +1,4 @@
+/*
 fs = require('fs'),
         PDFParser = require("pdf2json/pdfparser");
 
@@ -8,4 +9,4 @@ fs = require('fs'),
         fs.writeFile("./test.js", JSON.stringify(pdfData));
     });
 
-    pdfParser.loadPDF("./test.pdf");
+    pdfParser.loadPDF("./test.pdf");*/

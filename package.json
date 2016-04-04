@@ -10,11 +10,10 @@
   "license": "ISC",
   "dependencies": {
     "cheerio": "^0.20.0",
+    "commander": "^2.9.0",
+    "file-exists": "^1.0.0",
     "isnumeric": "^0.3.1",
-    "jquery": "^2.2.2",
     "newline-remove": "^1.0.2",
-    "pdf2json": "^1.1.5",
-    "pdfreader": "^0.1.4",
     "read-file": "^0.2.0"
   }
 }

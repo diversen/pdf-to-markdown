@@ -6,3 +6,4 @@
 *.jpg
 node_modules
 nbproject
+test

@@ -5,11 +5,12 @@ var read = require('read-file');
 var isNumeric = require("isnumeric");
 var removeNewline = require('newline-remove');
 var program = require('commander');
+var hash = require('./lib/hash');
 
 program
   .usage('[options] <file>')
   .version('0.0.1')
-  .option('--rp', 'Remove Page numbers')
+  .option('--outline [type]', 'Fallback outline. Generates outline from list of internal links. Specify the number you will use [2]', parseInt)
   .parse(process.argv);
 
 // Check file, and read file
@@ -23,15 +24,72 @@ if (!exists(file)) {
     $ = cheerio.load(buffer);
 }
 
-if (program.rp) {
-    removePageNumbers();
+// Remove page number. Remove last text element if is numeric
+function removePageNumbers() {
+    $('text:last-of-type').each(function( index ) {
+        if (isNumeric($( this ).text())) {
+            ($( this ).remove());
+        }
+    });
 }
 
-function outputAll() {
-    console.log($('*').html());
+
+// Try and add TOC without outline
+function addTocNoOutline () {
+    
+    // Toc to any ahref which points to internal part of xml file
+    $("a[href*=#]").parent().addClass('toc');
+    
+    // Add outline
+    $( "pdf2xml" ).append( "<outline>Test</outline>" );
+    
+    // Select internal links
+    $(".toc:nth-of-type(3n+1)").each(function() {
+        
+        // console.log($(this).html());
+        console.log($(this).html());
+        
+        // <item page="34">Regionsrepr&#xE6;sentanter</item>
+        // $( "<p>Test</p>" ).appendTo( "outline" );
+        // // $( this ).addClass( "foo" );
+    });
+    
+    console.log();
+    
+    $(".toc").each(function() {
+        
+        console.log($(this).html());
+        // console.log($(this).html());
+        
+        // <item page="34">Regionsrepr&#xE6;sentanter</item>
+        // $( "<p>Test</p>" ).appendTo( "outline" );
+        // // $( this ).addClass( "foo" );
+    });
+    
+    
 }
 
+function addToc (outline) {
+    console.log(outline);
+    if (!$('outline').length) {
+        addTocNoOutline(outline); 
+    }
+}
 
+// Check outline option
+var outline = 2;
+if (program.outline) {
+    outline = program.outline;
+} 
+
+addToc(outline);
+
+// console.log(program.outline);
+
+// addToc();
+// outputAll();
+
+// Process XML and save to buffer
 function processXML() {
     var log = new logger();
 
@@ -57,51 +115,7 @@ function processXML() {
     log.getOutput();
 }
 
-// Remove last text element if is numeric
-function removePageNumbers() {
-    $('text:last-of-type').each(function( index ) {
-        if (isNumeric($( this ).text())) {
-            ($( this ).remove());
-        }
-    });
-}
-
-function setTableTags () {
-    
-    this.valBuffer = new Array;
-    
-    this.last;
-
-    
-    this.setBuffer = function () {
-    
-
-        // Text
-        $('text').each(function () {
-
-            var top = $(this).attr('top');
-            var left = $(this).attr('left');
-            var text = $(this).text();
-            
-            var obj = ['test'];
-
-            this.valBuffer.push('test');
-
-            // log.isTable(top, left);
-            // log.text(text);
-
-        });
-
-        for (var key in this.buffer) {
-            console.log(key, this.buffer[key]);
-        }
-    };
-}
-
-var t = new setTableTags();
-t.setBuffer();
-
-// Logger
+// Logger. Collects XML to Markdown
 function logger () {
     
     this.result = ''; 
@@ -127,6 +141,10 @@ function logger () {
     this.getOutput = function() {
         console.log(this.result);
     };
+}
+
+function outputAll() {
+    console.log($('*').html());
 }
 
 

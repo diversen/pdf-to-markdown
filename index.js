@@ -86,6 +86,8 @@ function addChapters () {
 //addTitleChapter();
 //addChapters();
 // outputAll();
+
+removePageNumbers();
 processXML();
 // Process XML and save to buffer
 function processXML() {

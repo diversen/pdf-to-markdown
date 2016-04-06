@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 'use strict';
 
 var exists = require('file-exists');
@@ -6,20 +8,24 @@ var isNumeric = require("isnumeric");
 var removeNewline = require('newline-remove');
 var program = require('commander');
 var hash = require('./lib/hash');
+var path = require('path');
+
 
 program
   .usage('[options] <file>')
   .version('0.0.1')
-  .option('--outline [type]', 'Fallback outline. Generates outline from list of internal links. Specify the number you will use [2]', parseInt)
+  .option('-f, --file [file]', 'Specify XML file to parse')
+  .option('-t, --title [name]', 'Specify name of top header1')
   .parse(process.argv);
 
 // Check file, and read file
-var file = process.argv.slice(-1).pop();
+var file = program.file;
+
 if (!exists(file)) {
     console.log('File does not exist');
     process.exit(1);
 } else {
-    var buffer = read.sync(file, 'utf8');
+    var buffer = read.sync(file);
     var cheerio = require('cheerio'),
     $ = cheerio.load(buffer);
 }
@@ -33,62 +39,54 @@ function removePageNumbers() {
     });
 }
 
-
-// Try and add TOC without outline
-function addTocNoOutline () {
-    
-    // Toc to any ahref which points to internal part of xml file
-    $("a[href*=#]").parent().addClass('toc');
-    
-    // Add outline
-    $( "pdf2xml" ).append( "<outline>Test</outline>" );
-    
-    // Select internal links
-    $(".toc:nth-of-type(3n+1)").each(function() {
+// Add title chapter to outline
+function addTitleChapter () {
         
-        // console.log($(this).html());
-        console.log($(this).html());
-        
-        // <item page="34">Regionsrepr&#xE6;sentanter</item>
-        // $( "<p>Test</p>" ).appendTo( "outline" );
-        // // $( this ).addClass( "foo" );
-    });
-    
-    console.log();
-    
-    $(".toc").each(function() {
-        
-        console.log($(this).html());
-        // console.log($(this).html());
-        
-        // <item page="34">Regionsrepr&#xE6;sentanter</item>
-        // $( "<p>Test</p>" ).appendTo( "outline" );
-        // // $( this ).addClass( "foo" );
-    });
-    
-    
-}
-
-function addToc (outline) {
-    console.log(outline);
-    if (!$('outline').length) {
-        addTocNoOutline(outline); 
+    // Add first chapter to outline
+    var title = program.title;
+    if (title === undefined) {
+        title = program.file;
+        var ary = path.parse(title);
+        title = ary['name'];
     }
+
+    // First chapter and title
+    $('item').first().each(function (index) {
+        var page = $(this).attr('page');
+        console.log(page);
+    });
+    
+    $( "outline" ).prepend( "<item page='1'>" + title + "</item>" );
 }
 
-// Check outline option
-var outline = 2;
-if (program.outline) {
-    outline = program.outline;
-} 
+// Add chapters according to outline
+function addChapters () {
 
-addToc(outline);
+    // Limitation. Only one chapter per page. 
+    var begin = [];
+    $('outline item').each(function( index ) {
+         
+        // Get title and page
+        var title = $(this).text();
+        title = removeNewline(title);
+        var page = $(this).attr('page');
+        
+        // Only one chapter per page
+        if ( begin.indexOf(page) === -1 ) {
+            begin.push(page);
+            $("page[number='" + page + "']").wrap('<div class ="chapter"></div>');
+        }
+        
+        // console.log(title);
+        // console.log(page);
 
-// console.log(program.outline);
+    });
+}
 
-// addToc();
+//addTitleChapter();
+//addChapters();
 // outputAll();
-
+processXML();
 // Process XML and save to buffer
 function processXML() {
     var log = new logger();
@@ -101,8 +99,7 @@ function processXML() {
             var top =  $(this).attr('top');
             var left = $(this).attr('left');
             var text = $(this).text();
-            
-            log.isTable(top, left);
+
             log.text(text);
             
         }
